@@ -1,0 +1,155 @@
+﻿@using Core.Models
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ContractManagement_Deep</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="~/ContractManagement_Deep.styles.css" asp-append-version="true" />
+</head>
+<body dir="rtl">
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ContractManagement_Deep</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                مدیریت سیستم
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" asp-controller="Users" asp-action="Index">مدیریت کاربران</a>
+                                <a class="dropdown-item" asp-controller="Departments" asp-action="Index">مدیریت دپارتمان‌ها</a>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <ul class="navbar-nav ms-auto">
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            var user = await UserManager.GetUserAsync(User);
+                            <li>
+                                <h6>
+                                    @user.FullName خوش آمدید
+                                </h6>
+                            </li>
+
+                            <li class="nav-item">
+                                <form method="post" asp-action="logout" asp-controller="account">
+                                    <button type="submit" class="nav-link btn btn-link py-0" style="width:auto">
+                                        خروج
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+
+                            <li class="nav-item">
+                                <a asp-action="login" asp-controller="account" class="nav-link">ورود کاربر</a>
+                            </li>
+                            <li class="nav-item">
+                                <a asp-action="register" asp-controller="account" class="nav-link">ثبت کاربر</a>
+                            </li>
+                        }
+                    </ul>
+
+                    <ul class="navbar-nav">
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Contracts" asp-action="Index">قراردادهای من</a>
+                            </li>
+
+                            @if (User.IsInRole(RoleNames.ContractApprover))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Approvals" asp-action="Index">تایید قراردادها</a>
+                                </li>
+                            }
+
+                            @if (User.IsInRole(RoleNames.Admin))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                        مدیریت سیستم
+                                    </a>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" asp-controller="Users" asp-action="Index">مدیریت کاربران</a>
+                                        <a class="dropdown-item" asp-controller="Departments" asp-action="Index">مدیریت دپارتمان‌ها</a>
+                                    </div>
+                                </li>
+                            }
+
+                            <li class="nav-item">
+                                <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout">
+                                    <button type="submit" class="nav-link btn btn-link">خروج</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">ورود</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+            <div id="notificationToast" class="toast" style="position: fixed; top: 20px; right: 20px; min-width: 300px;">
+                <div class="toast-header">
+                    <strong class="me-auto">اعلان جدید</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    <p id="notificationMessage"></p>
+                    <a id="notificationLink" href="#" class="btn btn-sm btn-primary">مشاهده</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 1404 - ContractManagement_Deep - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script src="~/js/MyJS.js" asp-append-version="true"></script>
+    <script>
+        // فعال کردن مودال‌ها
+        document.addEventListener('DOMContentLoaded', function() {
+            var approveModal = new bootstrap.Modal(document.getElementById('approveModal'));
+            var rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+            var modifyModal = new bootstrap.Modal(document.getElementById('modifyModal'));
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

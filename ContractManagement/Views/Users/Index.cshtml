@@ -1,0 +1,37 @@
+﻿@using Core.Models
+<!-- Views/Users/Index.cshtml -->
+@model IEnumerable<ApplicationUser>
+
+<h2>مدیریت کاربران</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>نام کامل</th>
+            <th>ایمیل</th>
+            <th>دپارتمان</th>
+            <th>سمت</th>
+            <th>نقش‌ها</th>
+            <th>عملیات</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.FullName</td>
+                <td>@user.Email</td>
+                <td>@user.Department?.Name</td>
+                <td>@user.Position</td>
+                <td>
+                    @foreach (var role in ViewBag.UserRoles[user.Id])
+                    {
+                        <span class="badge bg-secondary">@role</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-warning">ویرایش</a>
+            </tr>
+        }
+    </tbody>
+</table>

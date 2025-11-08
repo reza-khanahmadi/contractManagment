@@ -1,0 +1,75 @@
+﻿@using Core.Extentions
+@using Core.Models
+@model IEnumerable<Core.Models.Contract>
+
+@{
+    ViewData["Title"] = "لیست قراردادهای من";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>عنوان</th>
+            <th>وضعیت</th>
+            <th>تاریخ ایجاد</th>
+            <th>تأییدکننده فعلی</th>
+            <th>عملیات</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Title</td>
+                <td>
+                    <span class="badge @GetStatusBadgeClass(item.Status)">
+                        @GetStatusText(item.Status)
+                    </span>
+                </td>
+                <td>@item.CreatedDate.ToPersianDate()</td>
+                <td>@item.CurrentApprover?.FullName</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">جزئیات</a>
+                    @if (item.Status == ContractStatus.Draft || item.Status == ContractStatus.NeedsModification)
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">ویرایش</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Create" class="btn btn-primary">ایجاد قرارداد جدید</a>
+
+@functions {
+    string GetStatusBadgeClass(ContractStatus status)
+    {
+        return status switch
+        {
+            ContractStatus.Draft => "badge-secondary",
+            ContractStatus.PendingApproval => "badge-primary",
+            ContractStatus.PendingDeputyApproval => "badge-info",
+            ContractStatus.Approved => "badge-success",
+            ContractStatus.Rejected => "badge-danger",
+            ContractStatus.NeedsModification => "badge-warning",
+            _ => "badge-light"
+        };
+    }
+
+    string GetStatusText(ContractStatus status)
+    {
+        return status switch
+        {
+            ContractStatus.Draft => "پیش‌نویس",
+            ContractStatus.PendingApproval => "در انتظار تأیید مدیر",
+            ContractStatus.PendingDeputyApproval => "در انتظار تأیید معاون",
+            ContractStatus.Approved => "تأیید شده",
+            ContractStatus.Rejected => "رد شده",
+            ContractStatus.NeedsModification => "نیاز به تغییرات",
+            _ => status.ToString()
+        };
+    }
+}

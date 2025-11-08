@@ -1,0 +1,33 @@
+﻿@using Core.Extentions
+@using Core.Models
+<!-- Views/Approvals/Review.cshtml -->
+@model Core.Models.Contract
+
+<h2>بررسی قرارداد</h2>
+
+<div class="card">
+    <div class="card-header">
+        <h4>@Model.Title</h4>
+    </div>
+    <div class="card-body">
+        <p><strong>توضیحات:</strong> @Model.Description</p>
+        <p><strong>محتوا:</strong> @Model.Content</p>
+        <p><strong>ایجاد شده توسط:</strong> @Model.CreatedBy.FullName</p>
+        <p><strong>تاریخ ایجاد:</strong> @Model.CreatedDate.ToPersianDate()</p>
+    </div>
+</div>
+
+<form asp-action="TakeAction" method="post">
+    <input type="hidden" name="id" value="@Model.Id" />
+
+    <div class="form-group mt-3">
+        <label for="comments">نظرات (اختیاری)</label>
+        <textarea name="comments" class="form-control" rows="3"></textarea>
+    </div>
+
+    <div class="btn-group mt-3">
+        <button type="submit" name="action" value="@ApprovalAction.Approved" class="btn btn-success">تایید</button>
+        <button type="submit" name="action" value="@ApprovalAction.RequestedModification" class="btn btn-warning">درخواست اصلاح</button>
+        <button type="submit" name="action" value="@ApprovalAction.Rejected" class="btn btn-danger">رد</button>
+    </div>
+</form>

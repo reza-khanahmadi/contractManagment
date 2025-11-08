@@ -1,0 +1,370 @@
+﻿@using Core.Extentions
+@using Core.Models
+@model Core.Models.Contract
+
+@{
+    ViewData["Title"] = "جزئیات قرارداد";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h3>@Model.Title</h3>
+        <span class="badge @GetStatusBadgeClass(Model.Status)">
+            @GetStatusText(Model.Status)
+        </span>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">توضیحات:</dt>
+            <dd class="col-sm-9">@Model.Description</dd>
+
+            <dt class="col-sm-3">دپارتمان:</dt>
+            <dd class="col-sm-9">@Model.Department?.Name</dd>
+
+            <dt class="col-sm-3">ایجاد کننده:</dt>
+            <dd class="col-sm-9">@Model.CreatedBy?.FullName</dd>
+
+            <dt class="col-sm-3">تاریخ ایجاد:</dt>
+            <dd class="col-sm-9">@Model.CreatedDate.ToPersianDate()</dd>
+
+            <dt class="col-sm-3">تأییدکننده فعلی:</dt>
+            <dd class="col-sm-9">@Model.CurrentApprover?.FullName</dd>
+
+            @if (Model.Status == ContractStatus.Rejected)
+            {
+                <dt class="col-sm-3">دلیل رد:</dt>
+                <dd class="col-sm-9 text-danger">@Model.RejectionReason</dd>
+            }
+
+            @if (Model.Status == ContractStatus.NeedsModification)
+            {
+                <dt class="col-sm-3">توضیحات تغییرات:</dt>
+                <dd class="col-sm-9 text-warning">@Model.ModificationComments</dd>
+            }
+        </dl>
+
+        <div class="mb-4">
+            <h5>محتوا:</h5>
+            <div class="border p-3">
+                @Html.Raw(Model.Content)
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <h5>تاریخچه کامل گردش کار</h5>
+            <div class="timeline">
+                @foreach (var item in Model.Approvals.OrderBy(a => a.ApprovalDate))
+                {
+                    <div class="timeline-item @GetTimelineItemClass(item.Action)">
+                        <div class="timeline-icon">
+                            @GetTimelineIcon(item.Action)
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <span class="timeline-action">@item.ActionDescription</span>
+                                <span class="timeline-date">@item.ApprovalDate</span>
+                            </div>
+                            <div class="timeline-user">
+                                توسط: @item.Approver?.FullName
+                            </div>
+                            @if (!string.IsNullOrEmpty(item.Comments))
+                            {
+                                <div class="timeline-comment">
+                                    <strong>توضیحات:</strong> @item.Comments
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(item.PreviousStatus) || !string.IsNullOrEmpty(item.NewStatus))
+                            {
+                                <div class="timeline-status">
+                                    <span class="status-change">
+                                        از <span class="badge @GetStatusBadgeClass(item.PreviousStatus)">@GetStatusText(item.PreviousStatus)</span>
+                                        به <span class="badge @GetStatusBadgeClass(item.NewStatus)">@GetStatusText(item.NewStatus)</span>
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <style>
+            .timeline {
+                position: relative;
+                padding-left: 50px;
+            }
+
+            .timeline-item {
+                position: relative;
+                padding-bottom: 20px;
+            }
+
+            .timeline-icon {
+                position: absolute;
+                left: -40px;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+            }
+
+            .timeline-content {
+                padding: 15px;
+                border-radius: 5px;
+                background: #f8f9fa;
+                margin-bottom: 10px;
+            }
+
+            .timeline-header {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 5px;
+            }
+
+            .timeline-date {
+                color: #6c757d;
+                font-size: 0.9em;
+            }
+
+            .timeline-comment {
+                margin-top: 8px;
+                padding: 8px;
+                background: #e9ecef;
+                border-radius: 4px;
+            }
+
+            .timeline-status {
+                margin-top: 8px;
+            }
+
+            .status-change {
+                font-size: 0.9em;
+            }
+            /* کلاس‌های رنگ بر اساس نوع عمل */
+            .timeline-item.Created .timeline-icon {
+                background: #6c757d;
+            }
+
+            .timeline-item.Submitted .timeline-icon {
+                background: #0d6efd;
+            }
+
+            .timeline-item.Approved .timeline-icon {
+                background: #198754;
+            }
+
+            .timeline-item.Rejected .timeline-icon {
+                background: #dc3545;
+            }
+
+            .timeline-item.RequestedModification .timeline-icon {
+                background: #ffc107;
+                color: #000;
+            }
+
+            .timeline-item.Modified .timeline-icon {
+                background: #fd7e14;
+            }
+
+            .timeline-item.Returned .timeline-icon {
+                background: #0dcaf0;
+            }
+        </style>
+
+        @functions {
+            string GetTimelineItemClass(ApprovalAction action)
+            {
+                return action.ToString();
+            }
+
+            string GetTimelineIcon(ApprovalAction action)
+            {
+                return action switch
+                {
+                    ApprovalAction.Created => "✏️",
+                    ApprovalAction.Submitted => "📤",
+                    ApprovalAction.Approved => "✅",
+                    ApprovalAction.Rejected => "❌",
+                    ApprovalAction.RequestedModification => "🔄",
+                    ApprovalAction.Modified => "✏️",
+                    ApprovalAction.Returned => "↩️",
+                    _ => "●"
+                };
+            }
+
+            string GetStatusBadgeClass(string? status)
+            {
+                if (Enum.TryParse<ContractStatus>(status, out var statusEnum))
+                {
+                    return GetStatusBadgeClass(statusEnum);
+                }
+                return "badge-light";
+            }
+
+            string GetStatusText(string? status)
+            {
+                if (Enum.TryParse<ContractStatus>(status, out var statusEnum))
+                {
+                    return GetStatusText(statusEnum);
+                }
+                return status ?? "نامشخص";
+            }
+        }
+    </div>
+    <div class="card-footer">
+    <div class="d-flex justify-content-between">
+        <a asp-action="Index" class="btn btn-secondary">بازگشت به لیست</a>
+        
+        <div class="action-buttons">
+            @if (Model.Status == ContractStatus.Draft || Model.Status == ContractStatus.NeedsModification)
+            {
+                <form asp-action="Submit" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-primary">ارسال به مدیر</button>
+                </form>
+            }
+            
+            @if ((User.IsInRole(RoleNames.DepartmentManager) || User.IsInRole(RoleNames.DepartmentDeputy)))
+            {
+                @if (Model.Status == ContractStatus.PendingApproval || Model.Status == ContractStatus.PendingDeputyApproval)
+                {
+                    <!-- دکمه‌های عمل -->
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal">تایید</button>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">رد</button>
+                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modifyModal">درخواست تغییر</button>
+                }
+            }
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Modal تایید -->
+<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="approveModalLabel">تایید قرارداد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Contracts" asp-action="Approve" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="approveComments" class="form-label">توضیحات (اختیاری)</label>
+                        <textarea class="form-control" id="approveComments" name="comments" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-success">تایید</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal رد -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectModalLabel">رد قرارداد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Contracts" asp-action="Reject" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="rejectReason" class="form-label">دلیل رد *</label>
+                        <textarea class="form-control" id="rejectReason" name="rejectionReason" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-danger">رد</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal درخواست تغییر -->
+<div class="modal fade" id="modifyModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">درخواست تغییرات</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form asp-action="RequestModification" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="modifyComments">توضیحات تغییرات *</label>
+                        <textarea class="form-control" id="modifyComments" name="comments" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-warning">ارسال درخواست</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function(){
+            // فعال کردن توابع مودال
+            $('.modal').modal({show: false});
+        });
+    </script>
+}
+
+@functions {
+    string GetStatusBadgeClass(ContractStatus status)
+    {
+        return status switch
+        {
+            ContractStatus.Draft => "badge-secondary",
+            ContractStatus.PendingApproval => "badge-primary",
+            ContractStatus.PendingDeputyApproval => "badge-info",
+            ContractStatus.Approved => "badge-success",
+            ContractStatus.Rejected => "badge-danger",
+            ContractStatus.NeedsModification => "badge-warning",
+            _ => "badge-light"
+        };
+    }
+
+    string GetStatusText(ContractStatus status)
+    {
+        return status switch
+        {
+            ContractStatus.Draft => "پیش‌نویس",
+            ContractStatus.PendingApproval => "در انتظار تأیید مدیر",
+            ContractStatus.PendingDeputyApproval => "در انتظار تأیید معاون",
+            ContractStatus.Approved => "تأیید شده",
+            ContractStatus.Rejected => "رد شده",
+            ContractStatus.NeedsModification => "نیاز به تغییرات",
+            _ => status.ToString()
+        };
+    }
+
+    string GetActionText(ApprovalAction action)
+    {
+        return action switch
+        {
+            ApprovalAction.Approved => "تایید",
+            ApprovalAction.Rejected => "رد",
+            ApprovalAction.RequestedModification => "درخواست تغییر",
+            _ => action.ToString()
+        };
+    }
+}

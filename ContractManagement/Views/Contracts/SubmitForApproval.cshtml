@@ -1,0 +1,36 @@
+﻿@using Core.Models
+@model Contract
+@{
+    ViewData["Title"] = "ارسال قرارداد برای تایید";
+}
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4>@ViewData["Title"]</h4>
+    </div>
+    <div class="card-body">
+        <h5>آیا از ارسال این قرارداد برای تایید اطمینان دارید؟</h5>
+
+        <dl class="row mt-4">
+            <dt class="col-sm-3">عنوان:</dt>
+            <dd class="col-sm-9">@Model.Title</dd>
+
+            <dt class="col-sm-3">تاییدکننده:</dt>
+            <dd class="col-sm-9">@(ViewBag.ApproverName ?? "تعیین نشده")</dd>
+        </dl>
+
+        <form asp-action="SubmitForApproval">
+            <input type="hidden" asp-for="Id" />
+
+            <div class="form-group mb-3">
+                <label for="comments" class="control-label">توضیحات (اختیاری)</label>
+                <textarea name="comments" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">تایید و ارسال</button>
+                <a asp-action="Index" class="btn btn-secondary">انصراف</a>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,55 @@
+﻿@using Core.Models
+@model Core.Models.Contract
+
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <h5>تاریخچه تأییدها</h5>
+    </div>
+    <div class="card-body">
+        @if (!Model.Approvals.Any())
+        {
+            <div class="alert alert-info">تاریخچه تأییدی وجود ندارد.</div>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>تأییدکننده</th>
+                        <th>تاریخ</th>
+                        <th>وضعیت</th>
+                        <th>توضیحات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var approval in Model.Approvals)
+                    {
+                        <tr>
+                            <td>@approval.Approver?.FullName</td>
+                            <td>@approval.ApprovalDate?.ToString("yyyy/MM/dd HH:mm")</td>
+                            <td>
+                                <span class="badge @GetActionBadgeClass(approval.Action)">
+                                    @approval.Action
+                                </span>
+                            </td>
+                            <td>@approval.Comments</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@functions {
+    string GetActionBadgeClass(ApprovalAction action)
+    {
+        return action switch
+        {
+            ApprovalAction.Approved => "bg-success",
+            ApprovalAction.Rejected => "bg-danger",
+            ApprovalAction.RequestedModification => "bg-warning",
+            _ => "bg-secondary"
+        };
+    }
+}
